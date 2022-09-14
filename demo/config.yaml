@@ -1,0 +1,16 @@
+server:
+  host: 0.0.0.0
+  port: 9994
+  sk: 1234567890123456
+  debug: true
+  Base: /xxx
+redis:
+  a1:
+    url: 127.0.0.1:6379
+    prefix: prefix
+    pass:
+    db: 1
+db:
+  a1:
+    url: USER:PASSWORD@tcp(URL)/TABLE?charset=utf8
+    debug: true
