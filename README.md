@@ -16,13 +16,13 @@ To install github.com/quiet-xu/goburnt package, you need to install Go and set y
 1. You first need [Go](https://golang.org/) installed (**version 1.18+ is required**), then you can use the below Go command to install Gin.
 
 ```sh
-$ go get -u github.com/quiet-xu/github.com/quiet-xu/goburnt
+$ go get -u github.com/quiet-xu/goburnt
 ```
 
 2. Import it in your code:
 
 ```go
-import "github.com/quiet-xu/github.com/quiet-xu/goburnt"
+import "github.com/quiet-xu/goburnt"
 ```
 
 ## Quick start DEV
@@ -33,6 +33,7 @@ package main
 import (
 	"github.com/quiet-xu/goburnt/burnt"
 	"github.com/quiet-xu/goburnt/demo"
+	"github.com/quiet-xu/goburnt/mid"
 	"github.com/quiet-xu/goburnt/conf"
 )
 
@@ -54,9 +55,13 @@ func (s Services) Get(a string) (string,error) {
 
 func main() {
 	burnt.NewBurntBuilder(Services{}).
-		SetBaseConf(conf.DefaultBaseConf().
-			SetBase("basepath").
+		SetBaseConf(burnt.GetConfDefault().
+			SetBase("asdasd").
 			SetDev()).
+		SetHttpConf(burnt.GetHttpGinDefault().
+			SetMidFunc("auth", mid.Auth).
+			SetMidFunc("log", mid.Log),
+		).
 		Boot()
 }
 ```
@@ -104,10 +109,10 @@ func main() {
 ## 实现
 
 | 功能                    | 实现情况 |
-|-----------------------|---|
-| 单体中间件                 |   |
-| 分组建中间件                | ✅ |
-| 全局context(自定义context) | ✅ |
-| 自动路由                  | ✅ |
-| 自定义组件                 |   |
-| 鉴权中心                  |  |
+|-----------------------|------|
+| 单体中间件                 | ✅    |
+| 分组建中间件                | ✅    |
+| 全局context(自定义context) | ✅    |
+| 自动路由                  | ✅    |
+| 自定义组件                 | ✅    |
+| 鉴权中心                  |      |

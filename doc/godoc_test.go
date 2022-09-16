@@ -1,7 +1,7 @@
-package cmd
+package doc
 
 import "testing"
 
 func TestName(t *testing.T) {
-	Cmd{}.ReadDoc()
+	GoDoc{}.ReadDoc()
 }

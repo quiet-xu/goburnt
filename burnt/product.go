@@ -3,8 +3,6 @@ package burnt
 import (
 	"encoding/json"
 	"github.com/quiet-xu/goburnt/conf"
-	"github.com/quiet-xu/goburnt/http"
-	"github.com/quiet-xu/goburnt/http/gin"
 	"github.com/quiet-xu/goburnt/swag"
 	"reflect"
 )
@@ -17,10 +15,10 @@ func (s *Burnt) setProductBoot() (err error) {
 		return
 	}
 
-	httpBoot := http.HttpMethods(gin.NewClient(s.baseConf.Server.Base))
 	for _, service := range services {
 		s.productBurnt[service.PkgPath+service.StructName+service.FuncName] = service
 	}
+
 	for _, service := range s.services {
 		stValue := reflect.ValueOf(service)
 		structName := reflect.TypeOf(service).Name()
@@ -29,12 +27,12 @@ func (s *Burnt) setProductBoot() (err error) {
 			name := reflect.TypeOf(service).Method(i).Name
 			path := reflect.TypeOf(service).PkgPath()
 			if val, has := s.productBurnt[path+structName+name]; has {
-				httpBoot.AnyByType(val.Router, reflect.ValueOf(service).Method(i), val.Method)
+				s.http.AnyByType(val.Router, reflect.ValueOf(service).Method(i), val.Method, val.Mids...)
 			}
 		}
 	}
 
-	err = httpBoot.Init()
+	err = s.http.Init()
 	if err != nil {
 		panic(err)
 	}

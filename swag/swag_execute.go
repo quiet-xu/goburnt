@@ -21,6 +21,9 @@ func (s SwagRead) getExecuteData(write string) (base ReadSwagBase, err error) {
 		if strings.Index(item, "Authorization") >= 0 {
 			base.Auth = true
 		}
+		if strings.Index(item, "Mid") >= 0 {
+			base.Mids = s.getMid(item)
+		}
 		if strings.Index(item, "Description") >= 0 {
 			base.Description += fmt.Sprintf("%s\n", s.getDescription(item))
 		}
@@ -77,6 +80,21 @@ func (SwagRead) getDescription(dst string) (description string) {
 			switch i {
 			case 2:
 				description = item
+			}
+		}
+	}
+	return
+}
+
+func (SwagRead) getMid(dst string) (mids []string) {
+	i := 0
+	routerStrs := strings.Split(dst, " ")
+	for _, item := range routerStrs {
+		if len(strings.ReplaceAll(item, " ", "")) > 0 {
+			i++
+			switch i {
+			case 2:
+				mids = strings.Split(item, ",")
 			}
 		}
 	}

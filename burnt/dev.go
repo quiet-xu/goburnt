@@ -1,8 +1,6 @@
 package burnt
 
 import (
-	"github.com/quiet-xu/goburnt/http"
-	"github.com/quiet-xu/goburnt/http/gin"
 	"github.com/quiet-xu/goburnt/swag"
 )
 
@@ -11,11 +9,10 @@ func (s Burnt) setDevBoot() (err error) {
 	if err != nil {
 		return
 	}
-	httpBoot := http.HttpMethods(gin.NewClient(s.baseConf.Server.Base))
 	for _, service := range services {
-		httpBoot.AnyByType(service.Router, service.Func, service.Method)
+		s.http.AnyByType(service.Router, service.Func, service.Method, service.Mids...)
 	}
-	err = httpBoot.Init()
+	err = s.http.Init()
 	if err != nil {
 		panic(err)
 	}

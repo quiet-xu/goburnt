@@ -6,7 +6,7 @@ import (
 
 func TestName(t *testing.T) {
 	//a := conf.NewReadYaml().GetBytesByPath("config.yaml")
-	//a, err := cmd.NewCmdClient().ReadDocByPackageName("github.com/quiet-xu/goburnt/demo")
+	//a, err := doc.NewCmdClient().ReadDocByPackageName("github.com/quiet-xu/goburnt/demo")
 	//t.Log(a, err)
 	//var x FView
 	//stValue := reflect.ValueOf(x)

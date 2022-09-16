@@ -1,9 +1,8 @@
 server:
-  host: 0.0.0.0
-  port: 9994
+  port: 0.0.0.0:9994
   sk: 1234567890123456
   debug: true
-  Base: /xxx
+  base: /xxx
 redis:
   a1:
     url: 127.0.0.1:6379

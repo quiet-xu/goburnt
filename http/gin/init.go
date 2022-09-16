@@ -10,21 +10,20 @@ import (
 )
 
 type HttpGin struct {
-	basePath  string
-	port      string
-	ginEngine *gin.Engine
-	ginRoute  *gin.RouterGroup
-	cbt       *Cbt
+	basePath   string
+	port       string
+	ginEngine  *gin.Engine
+	ginRoute   *gin.RouterGroup
+	midFuncMap map[string]func(*gin.Context)
+	cbt        *Cbt
 }
 
-func NewClient(basePath string) *HttpGin {
+func GetGinConf() *HttpGin {
 	ginDefault := gin.Default()
 	return &HttpGin{
-		ginEngine: ginDefault,
-		port:      "0.0.0.0:8080",
-		basePath:  basePath,
-		ginRoute:  ginDefault.Group(basePath),
-		cbt:       NewCbt(),
+		ginEngine:  ginDefault,
+		cbt:        NewCbt(),
+		midFuncMap: make(map[string]func(*gin.Context)),
 	}
 }
 
@@ -61,12 +60,34 @@ func (s HttpGin) Init() (err error) {
 //}
 //
 
-func (s *HttpGin) Post(api string, fv reflect.Value) http.HttpMethods {
-	s.ginRoute.POST(api, s.cbt.Cbt(fv.Interface()))
+func (s *HttpGin) Post(api string, fv reflect.Value, mids ...string) http.HttpMethods {
+	if s.ginRoute == nil {
+		s.ginRoute = s.ginEngine.Group("")
+	}
+	handlers := []gin.HandlerFunc{
+		s.cbt.Cbt(fv.Interface()),
+	}
+	for _, mid := range mids {
+		if val, has := s.midFuncMap[mid]; has {
+			handlers = append(handlers, val)
+		}
+	}
+	s.ginRoute.POST(api, handlers...)
 	return s
 }
-func (s *HttpGin) Get(api string, fv reflect.Value) http.HttpMethods {
-	s.ginRoute.GET(api, s.cbt.Cbt(fv.Interface()))
+func (s *HttpGin) Get(api string, fv reflect.Value, mids ...string) http.HttpMethods {
+	if s.ginRoute == nil {
+		s.ginRoute = s.ginEngine.Group("")
+	}
+	handlers := []gin.HandlerFunc{
+		s.cbt.Cbt(fv.Interface()),
+	}
+	for _, mid := range mids {
+		if val, has := s.midFuncMap[mid]; has {
+			handlers = append(handlers, val)
+		}
+	}
+	s.ginRoute.GET(api, handlers...)
 	return s
 }
 
@@ -76,16 +97,39 @@ func (s *HttpGin) SetPort(port string) http.HttpMethods {
 }
 
 func (s *HttpGin) SetResponse(response any) http.HttpMethods {
+	if response == nil {
+		return s
+	}
 	s.cbt.SetResponse(response)
 	return s
 }
 
-func (s *HttpGin) AnyByType(api string, fv reflect.Value, tp string) http.HttpMethods {
+// SetMidFunc 设置中间件
+func (s *HttpGin) SetMidFunc(midName string, mid func(*gin.Context)) http.HttpMethods {
+	s.midFuncMap[midName] = mid
+	return s
+}
+
+// AnyByType 任何类型的接口
+func (s *HttpGin) AnyByType(api string, fv reflect.Value, tp string, mids ...string) http.HttpMethods {
 	switch tp {
-	case "[POST]":
-		s.Post(api, fv)
 	case "[Get]":
-		s.Get(api, fv)
+		s.Get(api, fv, mids...)
+	default:
+		s.Post(api, fv, mids...)
 	}
 	return s
+}
+
+// SetBasePath 设置基础路径
+func (s *HttpGin) SetBasePath(basePath string) http.HttpMethods {
+	s.ginRoute = s.ginEngine.Group(basePath)
+	return s
+}
+func (s *HttpGin) GetBasePath() string {
+	return s.basePath
+}
+
+func (s *HttpGin) GetPort() string {
+	return s.port
 }

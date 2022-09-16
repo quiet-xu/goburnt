@@ -2,16 +2,16 @@ package burnt
 
 import (
 	"github.com/quiet-xu/goburnt/conf"
-	"github.com/quiet-xu/goburnt/http/resp"
+	"github.com/quiet-xu/goburnt/http"
 	"github.com/quiet-xu/goburnt/swag"
 	"strings"
 )
 
 type Burnt struct {
 	baseConf     conf.BaseConf
+	http         http.HttpMethods
 	services     []any
 	productBurnt map[string]swag.ReadSwagBase
-	response     any
 }
 
 func NewBurntBuilder(services ...any) *Burnt {
@@ -19,12 +19,7 @@ func NewBurntBuilder(services ...any) *Burnt {
 		baseConf:     *conf.DefaultBaseConf(),
 		productBurnt: make(map[string]swag.ReadSwagBase),
 		services:     services,
-		response:     resp.Response{},
 	}
-}
-func (s *Burnt) SetResponse(response any) *Burnt {
-	s.response = response
-	return s
 }
 
 // SetBaseConfByPath 设置默认配置 从文件读取
@@ -49,7 +44,24 @@ func (s *Burnt) SetBaseConf(baseConf *conf.BaseConf) *Burnt {
 	s.baseConf = *baseConf
 	return s
 }
-func (s Burnt) Boot() (err error) {
+
+// SetHttpConf 设置http基础配置
+func (s *Burnt) SetHttpConf(methods http.HttpMethods) *Burnt {
+	s.http = methods
+	return s
+}
+
+// Boot 一键启动
+func (s *Burnt) Boot() (err error) {
+	if s.http == nil {
+		s.SetDefaultHttp()
+	}
+	if len(s.http.GetBasePath()) == 0 {
+		s.http.SetBasePath(s.baseConf.Server.Base)
+	}
+	if len(s.http.GetPort()) == 0 {
+		s.http.SetPort(s.baseConf.Server.Port)
+	}
 	if s.baseConf.Server.Debug {
 		err = s.setDevBoot()
 		if err != nil {

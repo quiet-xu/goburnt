@@ -2,15 +2,14 @@ package swag
 
 import (
 	"encoding/json"
-	"github.com/quiet-xu/goburnt/cmd"
 	"github.com/quiet-xu/goburnt/conf"
+	"github.com/quiet-xu/goburnt/doc"
 	"os"
 	"reflect"
 	"strings"
 )
 
 type SwagRead struct {
-	//packageName   string
 	methodPathMap map[string][]Method //key: path val:methods
 	services      []any
 }
@@ -26,10 +25,11 @@ type ReadSwagBase struct {
 	Name        string        `json:"name"`        //api名称
 	Description string        `json:"description"` //详细介绍
 	Tag         string        `json:"tag"`         //分组
+	Mids        []string      `json:"mid"`         //中间件
 	Func        reflect.Value `json:"-"`
-	StructName  string
-	PkgPath     string
-	FuncName    string
+	StructName  string        `json:"structName"`
+	PkgPath     string        `json:"pkgPath"`
+	FuncName    string        `json:"funcName"`
 }
 
 func NewSwagClient(services ...any) *SwagRead {
@@ -39,6 +39,7 @@ func NewSwagClient(services ...any) *SwagRead {
 	}
 }
 
+// ReadSwag 读取swag注释
 func (s SwagRead) ReadSwag() (bases []ReadSwagBase, err error) {
 	for _, service := range s.services {
 		s.getMethodNameAndPkgPaths(service)
@@ -46,7 +47,7 @@ func (s SwagRead) ReadSwag() (bases []ReadSwagBase, err error) {
 	for key, methods := range s.methodPathMap {
 		for _, method := range methods {
 			var out string
-			out, err = cmd.NewCmdClient().ReadDocByMethodName(key, method.Name)
+			out, err = doc.NewCmdClient().ReadDocByStructAndMethodName(key, method.StructName, method.Name)
 			if err != nil {
 				return
 			}
