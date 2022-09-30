@@ -10,6 +10,7 @@ func TestName(t *testing.T) {
 	err := NewBurntBuilder(demo.FView{}).
 		SetBaseConf(GetConfDefault().
 			SetBase("asdasd").
+			SetPort("0.0.0.0:8088").
 			SetDev()).
 		SetHttpConf(GetHttpGinDefault().
 			SetMidFunc("auth", mid.Auth).

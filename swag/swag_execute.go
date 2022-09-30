@@ -10,21 +10,22 @@ func (s SwagRead) getExecuteData(write string) (base ReadSwagBase, err error) {
 	firstConv := strings.ReplaceAll(write, "\n", "")
 	outList := strings.Split(firstConv, "@")
 	for _, item := range outList {
-		if strings.Index(item, "Router") >= 0 {
+		if strings.Contains(item, "Router") {
 			route := s.getRouter(item)
 			base.Router = route.Url
 			base.Method = route.Method
 		}
-		if strings.Index(item, "Summary") >= 0 {
+		if strings.Contains(item, "Summary") {
 			base.Name = s.getSummary(item)
 		}
-		if strings.Index(item, "Authorization") >= 0 {
+		if strings.Contains(item, "Authorization") ||
+			strings.Contains(item, "Token") {
 			base.Auth = true
 		}
-		if strings.Index(item, "Mid") >= 0 {
+		if strings.Contains(item, "Mid") {
 			base.Mids = s.getMid(item)
 		}
-		if strings.Index(item, "Description") >= 0 {
+		if strings.Contains(item, "Description") {
 			base.Description += fmt.Sprintf("%s\n", s.getDescription(item))
 		}
 	}
