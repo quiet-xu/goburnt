@@ -1,13 +1,30 @@
 # github.com/quiet-xu/goburnt
 
-
-'面相swagger编程'，更快的生产业务，遵守'约定大于配置'，开箱即用
-
-
+一个奇幻的go框架，'面相swagger编程'，更快的生产业务，遵守'约定大于配置'，开箱即用,你甚至不用代码写任何有关http的内容，由swagger注释帮你解决
 
 swagger = > gin = > cbt => services
 
+## 原理
 
+通过 go doc 和 services 获取 swag注释，并自动解析 api所对应的func，dev环境采用每次运行自动生成json，product采用每次运行读取json来运行gin
+
+## 实现
+
+| 功能                    | 实现情况 |
+|-----------------------|------|
+| 单体中间件                 | ✅    |
+| 分组建中间件                | ✅    |
+| 全局context(自定义context) | ✅    |
+| 自动路由                  | ✅    |
+| 自定义组件                 | ✅    |
+| 鉴权中心                  |      |
+| 内置mysql               |      |
+| 内置redis               |      |
+| 内置接口权限                |      |
+| 自动生成swag              |      |
+| 流量监控                  |      |
+| 内置websocket           |      |
+| 内置日志服务                |      |
 
 ## Installation
 
@@ -101,25 +118,3 @@ func main() {
 }
 ```
 
-
-## 原理
-
-通过 go doc 和 services 获取 swag注释，并自动解析 api所对应的func，dev环境采用每次运行自动生成json，product采用每次运行读取json来运行gin
-
-## 实现
-
-| 功能                    | 实现情况 |
-|-----------------------|------|
-| 单体中间件                 | ✅    |
-| 分组建中间件                | ✅    |
-| 全局context(自定义context) | ✅    |
-| 自动路由                  | ✅    |
-| 自定义组件                 | ✅    |
-| 鉴权中心                  |      |
-| 内置mysql               |      |
-| 内置redis               |      |
-| 内置接口权限                |      |
-| 自动生成swag              |      |
-| 流量监控                  |      |
-| 内置websocket           |      |
-| 内置日志服务                |      |
