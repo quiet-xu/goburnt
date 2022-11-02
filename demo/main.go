@@ -8,14 +8,15 @@ type AView struct {
 }
 
 // Get
-// @Mid auth,log
+// @Mid log
+// @Mid! auth
 // @Summary 获取该主体的当前最新主流程合同
 // @Description xxxxxxxaaa
 // @Description asdasdop
 // @Tags ygb - 合同
 // @Param Authorization header string true "身份加密串"
-// @Success 200 {object}  dubbo.RespGetContractCurrentByUserKey  "返回成功样式"
 // @Router /a [Get]
+// @Router /a2 [POST]
 func (s FView) Get(t string) (x string, err error) {
 	return "123123", nil
 }
@@ -26,7 +27,6 @@ func (s FView) Get(t string) (x string, err error) {
 // @Description asdasdop2
 // @Tags ygb - 合同
 // @Param Authorization header string true "身份加密串"
-// @Success 200 {object}  dubbo.RespGetContractCurrentByUserKey  "返回成功样式"
 // @Router /b [Get]
 func (FView) Get2(t string) (x string, err error) {
 	return "123123", nil
@@ -38,7 +38,6 @@ func (FView) Get2(t string) (x string, err error) {
 // @Description asdasdop2
 // @Tags ygb - 合同
 // @Param Authorization header string true "身份加密串"
-// @Success 200 {object}  dubbo.RespGetContractCurrentByUserKey  "返回成功样式"
 // @Router /c [POST]
 func (FView) get3(t string) (x string, err error) {
 	return "123123", nil

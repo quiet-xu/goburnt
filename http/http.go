@@ -12,11 +12,11 @@ type HttpMethods interface {
 	//// SetCorsMethods GET POST PUT DELETE
 	//SetCorsMethods(methods ...string) HttpMethods
 
-	AnyByType(api string, fv reflect.Value, tp string, mids ...string) HttpMethods
+	AnyByType(path string, fv reflect.Value, tp string, mids ...string) HttpMethods
 
-	Get(api string, fv reflect.Value, mids ...string) HttpMethods
+	Get(path string, fv reflect.Value, mids ...string) HttpMethods
 
-	Post(api string, fv reflect.Value, mids ...string) HttpMethods
+	Post(path string, fv reflect.Value, mids ...string) HttpMethods
 
 	SetPort(port string) HttpMethods
 	GetPort() string

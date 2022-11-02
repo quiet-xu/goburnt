@@ -2,6 +2,7 @@ package swag
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/quiet-xu/goburnt/conf"
 	"github.com/quiet-xu/goburnt/doc"
 	"os"
@@ -19,13 +20,13 @@ type Method struct {
 	StructName string        //总方法名
 }
 type ReadSwagBase struct {
-	Router      string        `json:"router"`      //api
-	Auth        bool          `json:"auth"`        //权限
-	Method      string        `json:"method"`      //Post Get Put Delete
-	Name        string        `json:"name"`        //api名称
-	Description string        `json:"description"` //详细介绍
-	Tag         string        `json:"tag"`         //分组
-	Mids        []string      `json:"mid"`         //中间件
+	Routers     []RouteItem         `json:"routers"`     //api
+	Auth        bool                `json:"auth"`        //权限
+	Name        string              `json:"name"`        //api名称
+	Description string              `json:"description"` //详细介绍
+	Tag         string              `json:"tag"`         //分组
+	Mids        map[string]struct{} `json:"mid"`         //中间件
+	ExcludeMids map[string]struct{}
 	Func        reflect.Value `json:"-"`
 	StructName  string        `json:"structName"`
 	PkgPath     string        `json:"pkgPath"`
@@ -40,7 +41,7 @@ func NewSwagClient(services ...any) *SwagRead {
 }
 
 // ReadSwag 读取swag注释
-func (s SwagRead) ReadSwag() (bases []ReadSwagBase, err error) {
+func (s *SwagRead) ReadSwag() (bases []ReadSwagBase, err error) {
 	for _, service := range s.services {
 		s.getMethodNameAndPkgPaths(service)
 	}
@@ -55,7 +56,8 @@ func (s SwagRead) ReadSwag() (bases []ReadSwagBase, err error) {
 				continue
 			}
 			var base ReadSwagBase
-			base, err = s.getExecuteData(out)
+
+			base, err = s.executeServicesData(out)
 			if err != nil {
 				return
 			}
@@ -63,6 +65,20 @@ func (s SwagRead) ReadSwag() (bases []ReadSwagBase, err error) {
 			base.Func = method.Func
 			base.PkgPath = key
 			base.StructName = method.StructName
+			out, err = doc.NewCmdClient().ReadDocByMethodName(key, method.StructName)
+			if err != nil {
+				return
+			}
+			if len(out) == 0 {
+				continue
+			}
+			groupMids := s.executeMethodGroupData(out).Mids
+			for k := range groupMids {
+				if base.Mids == nil {
+					base.Mids = make(map[string]struct{})
+				}
+				base.Mids[k] = struct{}{}
+			}
 			bases = append(bases, base)
 		}
 	}
@@ -93,8 +109,8 @@ func (s SwagRead) ReadSwag() (bases []ReadSwagBase, err error) {
 	return
 }
 
-// SetServices 添加服务
-func (s *SwagRead) SetServices(services ...any) *SwagRead {
+// AddReadServices 添加服务
+func (s *SwagRead) AddReadServices(services ...any) *SwagRead {
 	s.services = append(s.services, services)
 	return s
 }
@@ -114,4 +130,20 @@ func (s *SwagRead) getMethodNameAndPkgPaths(dst any) {
 		})
 	}
 	return
+}
+
+// PutOut 输出已经读到的api
+func (s *SwagRead) PutOut(base ...ReadSwagBase) {
+	fmt.Println(fmt.Sprintf("[序号]  %-10s %-60s %-60s %v", "方法", "api", "描述", "中间件"))
+	for i, swagBase := range base {
+		for k, route := range swagBase.Routers {
+			var mids []string
+			for mid := range swagBase.Mids {
+				if _, has := swagBase.ExcludeMids[mid]; !has {
+					mids = append(mids, mid)
+				}
+			}
+			fmt.Println(fmt.Sprintf("[%-5s]%-10s %-60s %-60s %v", fmt.Sprintf("%d-%d", i+1, k), route.Method, route.Url, swagBase.Name, mids))
+		}
+	}
 }

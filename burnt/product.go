@@ -14,21 +14,28 @@ func (s *Burnt) setProductBoot() (err error) {
 	if err != nil {
 		return
 	}
-
 	for _, service := range services {
 		s.productBurnt[service.PkgPath+service.StructName+service.FuncName] = service
 	}
-
-	for _, service := range s.services {
-		stValue := reflect.ValueOf(service)
-		structName := reflect.TypeOf(service).Name()
+	for _, view := range s.services {
+		stValue := reflect.ValueOf(view)
+		structName := reflect.TypeOf(view).Name()
 		num := stValue.NumMethod()
 		for i := 0; i < num; i++ {
-			name := reflect.TypeOf(service).Method(i).Name
-			path := reflect.TypeOf(service).PkgPath()
+			name := reflect.TypeOf(view).Method(i).Name
+			path := reflect.TypeOf(view).PkgPath()
 			if val, has := s.productBurnt[path+structName+name]; has {
-				s.http.AnyByType(val.Router, reflect.ValueOf(service).Method(i), val.Method, val.Mids...)
+				var mids []string
+				for mid := range val.Mids {
+					if _, have := val.ExcludeMids[mid]; !have {
+						mids = append(mids, mid)
+					}
+				}
+				for _, item := range val.Routers {
+					s.http.AnyByType(item.Url, reflect.ValueOf(view).Method(i), item.Method, mids...)
+				}
 			}
+
 		}
 	}
 

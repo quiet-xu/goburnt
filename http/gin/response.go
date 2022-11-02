@@ -42,6 +42,7 @@ func (s *Cbt) getResponseConfig() {
 	}
 }
 
+// SuccessWithData 成功参数
 func (s Cbt) SuccessWithData(data interface{}, c *gin.Context) {
 	resp := make(gin.H)
 	if len(s.responseConfig.dataFieldName) > 0 {
@@ -52,6 +53,8 @@ func (s Cbt) SuccessWithData(data interface{}, c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
+
+// FailWithData 失败参数
 func (s Cbt) FailWithData(err error, c *gin.Context) {
 	resp := make(gin.H)
 	if len(s.responseConfig.errFieldName) > 0 {

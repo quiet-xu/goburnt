@@ -1,6 +1,7 @@
 package burnt
 
 import (
+	"fmt"
 	"github.com/quiet-xu/goburnt/conf"
 	"github.com/quiet-xu/goburnt/http"
 	"github.com/quiet-xu/goburnt/swag"
@@ -53,6 +54,20 @@ func (s *Burnt) SetHttpConf(methods http.HttpMethods) *Burnt {
 
 // Boot 一键启动
 func (s *Burnt) Boot() (err error) {
+
+	fmt.Printf(`
+ ________      ________          ________      ___  ___      ________      ________       _________   
+|\   ____\    |\   __  \        |\   __  \    |\  \|\  \    |\   __  \    |\   ___  \    |\___   ___\ 
+\ \  \___|    \ \  \|\  \       \ \  \|\ /_   \ \  \\\  \   \ \  \|\  \   \ \  \\ \  \   \|___ \  \_| 
+ \ \  \  ___   \ \  \\\  \       \ \   __  \   \ \  \\\  \   \ \   _  _\   \ \  \\ \  \       \ \  \  
+  \ \  \|\  \   \ \  \\\  \       \ \  \|\  \   \ \  \\\  \   \ \  \\  \|   \ \  \\ \  \       \ \  \ 
+   \ \_______\   \ \_______\       \ \_______\   \ \_______\   \ \__\\ _\    \ \__\\ \__\       \ \__\
+    \|_______|    \|_______|        \|_______|    \|_______|    \|__|\|__|    \|__| \|__|        \|__|
+                                                                                                      
+        by. xu                          version 1.0.0                                                                     
+                                                                                                      
+`)
+
 	if s.http == nil {
 		s.SetDefaultHttp()
 	}
