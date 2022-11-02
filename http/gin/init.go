@@ -19,6 +19,7 @@ type HttpGin struct {
 }
 
 func GetGinConf() *HttpGin {
+	gin.SetMode(gin.ReleaseMode)
 	ginDefault := gin.Default()
 	return &HttpGin{
 		ginEngine:  ginDefault,
@@ -27,7 +28,7 @@ func GetGinConf() *HttpGin {
 	}
 }
 
-func (s HttpGin) Init() (err error) {
+func (s *HttpGin) Init() (err error) {
 
 	//跨域
 	s.ginEngine.Use(cors.New(cors.Config{
@@ -60,7 +61,7 @@ func (s HttpGin) Init() (err error) {
 //}
 //
 
-func (s *HttpGin) Post(api string, fv reflect.Value, mids ...string) http.HttpMethods {
+func (s *HttpGin) Post(path string, fv reflect.Value, mids ...string) http.HttpMethods {
 	if s.ginRoute == nil {
 		s.ginRoute = s.ginEngine.Group("")
 	}
@@ -72,10 +73,11 @@ func (s *HttpGin) Post(api string, fv reflect.Value, mids ...string) http.HttpMe
 			handlers = append(handlers, val)
 		}
 	}
-	s.ginRoute.POST(api, handlers...)
+	s.ginRoute.POST(path, handlers...)
+
 	return s
 }
-func (s *HttpGin) Get(api string, fv reflect.Value, mids ...string) http.HttpMethods {
+func (s *HttpGin) Get(path string, fv reflect.Value, mids ...string) http.HttpMethods {
 	if s.ginRoute == nil {
 		s.ginRoute = s.ginEngine.Group("")
 	}
@@ -87,7 +89,8 @@ func (s *HttpGin) Get(api string, fv reflect.Value, mids ...string) http.HttpMet
 			handlers = append(handlers, val)
 		}
 	}
-	s.ginRoute.GET(api, handlers...)
+	s.ginRoute.GET(path, handlers...)
+
 	return s
 }
 
@@ -111,12 +114,12 @@ func (s *HttpGin) SetMidFunc(midName string, mid func(*gin.Context)) http.HttpMe
 }
 
 // AnyByType 任何类型的接口
-func (s *HttpGin) AnyByType(api string, fv reflect.Value, tp string, mids ...string) http.HttpMethods {
+func (s *HttpGin) AnyByType(path string, fv reflect.Value, tp string, mids ...string) http.HttpMethods {
 	switch tp {
 	case "[Get]":
-		s.Get(api, fv, mids...)
+		s.Get(path, fv, mids...)
 	default:
-		s.Post(api, fv, mids...)
+		s.Post(path, fv, mids...)
 	}
 	return s
 }
