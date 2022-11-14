@@ -1,11 +1,13 @@
-package gin
+package ghttp
 
 import (
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/quiet-xu/goburnt/http"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -16,10 +18,11 @@ type HttpGin struct {
 	ginRoute   *gin.RouterGroup
 	midFuncMap map[string]func(*gin.Context)
 	cbt        *Cbt
+	pattern    string //html 路径
 }
 
 func GetGinConf() *HttpGin {
-	gin.SetMode(gin.ReleaseMode)
+	//gin.SetMode(gin.ReleaseMode)
 	ginDefault := gin.Default()
 	return &HttpGin{
 		ginEngine:  ginDefault,
@@ -29,7 +32,9 @@ func GetGinConf() *HttpGin {
 }
 
 func (s *HttpGin) Init() (err error) {
-
+	if len(s.pattern) > 0 {
+		s.ginEngine.LoadHTMLGlob(s.pattern)
+	}
 	//跨域
 	s.ginEngine.Use(cors.New(cors.Config{
 		AllowOriginFunc: func(string) bool {
@@ -41,11 +46,13 @@ func (s *HttpGin) Init() (err error) {
 		MaxAge:          12 * time.Hour,
 	}))
 	s.ginEngine.Group(s.basePath)
+	fmt.Println("status: gin http load over~ 🎉 ", "path : http://"+s.port)
 	err = s.ginEngine.Run(s.port)
 	if err != nil {
 		log.Println(err.Error())
 		return
 	}
+
 	return
 }
 
@@ -65,14 +72,13 @@ func (s *HttpGin) Post(path string, fv reflect.Value, mids ...string) http.HttpM
 	if s.ginRoute == nil {
 		s.ginRoute = s.ginEngine.Group("")
 	}
-	handlers := []gin.HandlerFunc{
-		s.cbt.Cbt(fv.Interface()),
-	}
+	var handlers []gin.HandlerFunc
 	for _, mid := range mids {
 		if val, has := s.midFuncMap[mid]; has {
 			handlers = append(handlers, val)
 		}
 	}
+	handlers = append(handlers, s.cbt.Cbt(fv.Interface()))
 	s.ginRoute.POST(path, handlers...)
 
 	return s
@@ -81,14 +87,13 @@ func (s *HttpGin) Get(path string, fv reflect.Value, mids ...string) http.HttpMe
 	if s.ginRoute == nil {
 		s.ginRoute = s.ginEngine.Group("")
 	}
-	handlers := []gin.HandlerFunc{
-		s.cbt.Cbt(fv.Interface()),
-	}
+	var handlers []gin.HandlerFunc
 	for _, mid := range mids {
 		if val, has := s.midFuncMap[mid]; has {
 			handlers = append(handlers, val)
 		}
 	}
+	handlers = append(handlers, s.cbt.Cbt(fv.Interface()))
 	s.ginRoute.GET(path, handlers...)
 
 	return s
@@ -115,8 +120,9 @@ func (s *HttpGin) SetMidFunc(midName string, mid func(*gin.Context)) http.HttpMe
 
 // AnyByType 任何类型的接口
 func (s *HttpGin) AnyByType(path string, fv reflect.Value, tp string, mids ...string) http.HttpMethods {
+	tp = strings.ToLower(tp)
 	switch tp {
-	case "[Get]":
+	case "[get]":
 		s.Get(path, fv, mids...)
 	default:
 		s.Post(path, fv, mids...)
@@ -135,4 +141,9 @@ func (s *HttpGin) GetBasePath() string {
 
 func (s *HttpGin) GetPort() string {
 	return s.port
+}
+
+func (s *HttpGin) SetLoadHtml(pattern string) http.HttpMethods {
+	s.pattern = pattern
+	return s
 }

@@ -2,6 +2,7 @@ package burnt
 
 import (
 	"github.com/quiet-xu/goburnt/swag"
+	"sort"
 )
 
 func (s *Burnt) setDevBoot() (err error) {
@@ -11,16 +12,22 @@ func (s *Burnt) setDevBoot() (err error) {
 	}
 	swag.NewSwagClient().PutOut(services...)
 	for _, service := range services {
-		for _, item := range service.Routers {
-			var mids []string
-			for mid := range service.Mids {
-				if _, have := service.ExcludeMids[mid]; !have {
-					mids = append(mids, mid)
-				}
+		var midIndexS []int
+		midNewMap := make(map[int]string)
+		for mid, v := range service.Mids {
+			if _, have := service.ExcludeMids[mid]; !have {
+				midIndexS = append(midIndexS, v)
+				midNewMap[v] = mid
 			}
+		}
+		sort.Ints(midIndexS)
+		var mids []string
+		for _, index := range midIndexS {
+			mids = append(mids, midNewMap[index])
+		}
+		for _, item := range service.Routers {
 			s.http.AnyByType(item.Url, service.Func, item.Method, mids...)
 		}
-
 	}
 	err = s.http.Init()
 	if err != nil {

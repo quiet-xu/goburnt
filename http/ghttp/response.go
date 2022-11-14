@@ -1,4 +1,4 @@
-package gin
+package ghttp
 
 import (
 	"github.com/gin-gonic/gin"
@@ -66,4 +66,20 @@ func (s Cbt) FailWithData(err error, c *gin.Context) {
 		resp[s.responseConfig.successFieldName] = false
 	}
 	c.JSON(http.StatusOK, resp)
+	c.Abort()
+}
+
+// FailWithCode 失败参数
+func (s Cbt) FailWithCode(err string, code int, c *gin.Context) {
+	resp := make(gin.H)
+	if len(s.responseConfig.errFieldName) > 0 {
+		resp[s.responseConfig.errFieldName] = err
+	} else if len(s.responseConfig.dataFieldName) > 0 {
+		resp[s.responseConfig.dataFieldName] = err
+	}
+	if len(s.responseConfig.successFieldName) > 0 {
+		resp[s.responseConfig.successFieldName] = false
+	}
+	c.JSON(code, resp)
+	c.Abort()
 }

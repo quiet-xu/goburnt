@@ -9,15 +9,27 @@ import (
 func (s *SwagRead) executeServicesData(write string) (base ReadSwagBase, err error) {
 	firstConv := strings.ReplaceAll(write, "\n", "")
 	outList := strings.Split(firstConv, "@")
+	if len(outList) > 1 {
+		outList = outList[1:]
+	} else {
+		return
+	}
+
 	for _, item := range outList {
+		if strings.Contains(item, "Success") || strings.Contains(item, "Param") {
+			continue
+		}
 		if strings.Contains(item, "Router") {
 			route := s.getRouter(item)
 			base.Routers = append(base.Routers, RouteItem{
 				Url:    route.Url,
 				Method: route.Method,
 			})
-
 		}
+		if strings.Contains(item, "Tag") {
+			base.Tag = s.getTag(item)
+		}
+
 		if strings.Contains(item, "Summary") {
 			base.Name = s.getSummary(item)
 		}
@@ -76,17 +88,13 @@ func (*SwagRead) getRouter(dst string) (router RouteItem) {
 
 // getSummary  获取标题
 func (*SwagRead) getSummary(dst string) (summary string) {
-	i := 0
-	routerStrs := strings.Split(dst, " ")
-	for _, item := range routerStrs {
-		if len(strings.ReplaceAll(item, " ", "")) > 0 {
-			i++
-			switch i {
-			case 2:
-				summary = item
-			}
-		}
-	}
+	summary = strings.ReplaceAll(dst, "Summary ", "")
+	return
+}
+
+// getTag  获取标题
+func (*SwagRead) getTag(dst string) (tag string) {
+	tag = strings.ReplaceAll(dst, "Tag ", "")
 	return
 }
 
@@ -106,7 +114,7 @@ func (*SwagRead) getDescription(dst string) (description string) {
 	return
 }
 
-func (*SwagRead) getMid(dst string, index int) (midMap map[string]struct{}) {
+func (*SwagRead) getMid(dst string, index int) (midMap map[string]int) {
 	i := 0
 	routerStrs := strings.Split(dst, " ")
 	var mids []string
@@ -119,9 +127,9 @@ func (*SwagRead) getMid(dst string, index int) (midMap map[string]struct{}) {
 			}
 		}
 	}
-	midMap = make(map[string]struct{}, len(mids))
-	for _, mid := range mids {
-		midMap[mid] = struct{}{}
+	midMap = make(map[string]int, len(mids))
+	for k, mid := range mids {
+		midMap[mid] = k
 	}
 	return
 }

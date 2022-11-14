@@ -2,11 +2,11 @@ package burnt
 
 import (
 	"github.com/quiet-xu/goburnt/conf"
-	"github.com/quiet-xu/goburnt/http/gin"
+	"github.com/quiet-xu/goburnt/http/ghttp"
 )
 
-func GetHttpGinDefault() *gin.HttpGin {
-	return gin.GetGinConf()
+func GetHttpGinDefault() *ghttp.HttpGin {
+	return ghttp.GetGinConf()
 }
 
 func GetConfDefault() *conf.BaseConf {

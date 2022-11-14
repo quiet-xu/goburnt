@@ -3,7 +3,7 @@ package middle
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	gin2 "github.com/quiet-xu/goburnt/http/gin"
+	gin2 "github.com/quiet-xu/goburnt/http/ghttp"
 )
 
 type GinMiddle struct {
