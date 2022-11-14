@@ -5,6 +5,7 @@ import (
 	"github.com/quiet-xu/goburnt/conf"
 	"github.com/quiet-xu/goburnt/swag"
 	"reflect"
+	"sort"
 )
 
 func (s *Burnt) setProductBoot() (err error) {
@@ -14,6 +15,7 @@ func (s *Burnt) setProductBoot() (err error) {
 	if err != nil {
 		return
 	}
+	swag.NewSwagClient().PutOut(services...)
 	for _, service := range services {
 		s.productBurnt[service.PkgPath+service.StructName+service.FuncName] = service
 	}
@@ -25,11 +27,18 @@ func (s *Burnt) setProductBoot() (err error) {
 			name := reflect.TypeOf(view).Method(i).Name
 			path := reflect.TypeOf(view).PkgPath()
 			if val, has := s.productBurnt[path+structName+name]; has {
-				var mids []string
-				for mid := range val.Mids {
+				var midIndexS []int
+				midNewMap := make(map[int]string)
+				for mid, v := range val.Mids {
 					if _, have := val.ExcludeMids[mid]; !have {
-						mids = append(mids, mid)
+						midIndexS = append(midIndexS, v)
+						midNewMap[v] = mid
 					}
+				}
+				sort.Ints(midIndexS)
+				var mids []string
+				for _, index := range midIndexS {
+					mids = append(mids, midNewMap[index])
 				}
 				for _, item := range val.Routers {
 					s.http.AnyByType(item.Url, reflect.ValueOf(view).Method(i), item.Method, mids...)

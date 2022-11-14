@@ -29,5 +29,7 @@ type HttpMethods interface {
 	SetMidFunc(midName string, mid func(*gin.Context)) HttpMethods
 
 	Init() error
+
+	SetLoadHtml(pattern string) HttpMethods
 	//
 }

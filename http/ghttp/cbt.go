@@ -1,9 +1,10 @@
-package gin
+package ghttp
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/quiet-xu/goburnt/http/resp"
+	"net/http"
 	"reflect"
 	"strings"
 )
@@ -32,9 +33,11 @@ type Cbt struct {
 }
 
 func NewCbt() *Cbt {
-	return &Cbt{
+	s := &Cbt{
 		response: resp.Response{},
 	}
+	s.getResponseConfig()
+	return s
 }
 
 //SetResponse 设置自定义返回结构
@@ -52,8 +55,11 @@ func (s *Cbt) SetResponse(response any) *Cbt {
 }
 
 // Cbt 转换 (基础) ControlBasicTrans
-func (s Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
-	s.getResponseConfig()
+func (s *Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
+	switch apiFunc.(type) {
+	case func(*gin.Context):
+		return apiFunc.(func(*gin.Context))
+	}
 	apiVal := reflect.ValueOf(apiFunc)
 	if apiVal.Type().Kind() != reflect.Func {
 		panic("入参需要是函数")
@@ -73,8 +79,7 @@ func (s Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
 	}
 
 	return func(c *gin.Context) {
-		realInputRaw := reflect.New(apiVal.Type().In(0))
-		realInput := realInputRaw.Interface()
+		realInput := reflect.New(apiVal.Type().In(0)).Interface()
 		if c.Request.Method == "GET" {
 			err := c.ShouldBind(realInput)
 			if err != nil && err.Error() != "EOF" {
@@ -83,11 +88,26 @@ func (s Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
 			}
 		} else {
 			if strings.Index(c.Request.Header.Get("Content-Type"), "multipart/form-data") < 0 {
-				err := c.ShouldBindJSON(realInput)
-				if err != nil && err.Error() != "EOF" {
-					s.FailWithData(ReqValidateErr, c)
-					return
+				switch realInput.(type) {
+				case *[]uint8:
+					buf := make([]byte, c.Request.ContentLength)
+					_, err := c.Request.Body.Read(buf)
+					if err != nil && err.Error() != "EOF" {
+						s.FailWithData(ReqValidateErr, c)
+						return
+					}
+					realInput = &buf
+					//realInput =
+					//reflect.ValueOf(realInput).Set(reflect.ValueOf(reqBytes))
+					//realInput = reqBytes
+				default:
+					err := c.ShouldBindJSON(realInput)
+					if err != nil && err.Error() != "EOF" {
+						s.FailWithData(ReqValidateErr, c)
+						return
+					}
 				}
+
 			}
 		}
 		if reflect.TypeOf(realInput).Implements(MiddlewareInterfaceType) {
@@ -100,18 +120,56 @@ func (s Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
 
 		switch len(o) {
 		case 1: //(err error)
-			if o[0].Interface() != nil && o[0].Interface().(error) != nil {
-				s.FailWithData(o[0].Interface().(error), c)
-				return
+			if o[0].Interface() != nil {
+				switch o[0].Interface().(type) {
+				case *[]uint8:
+					_, err := c.Writer.Write(o[0].Interface().([]byte))
+					if err != nil {
+						c.Status(http.StatusBadRequest)
+						return
+					}
+				case error:
+					s.FailWithData(o[0].Interface().(error), c)
+					return
+				default:
+					s.SuccessWithData(o[0].Interface(), c)
+				}
 			} else {
 				s.SuccessWithData(nil, c)
 			}
 		case 2: //(res interface{},err error)
+
 			if o[1].Interface() != nil && o[1].Interface().(error) != nil {
-				s.FailWithData(o[1].Interface().(error), c)
-				return
+				switch o[1].Interface().(type) {
+				case []uint8:
+					_, err := c.Writer.Write(o[1].Interface().([]byte))
+					if err != nil {
+						c.Status(http.StatusBadRequest)
+						return
+					}
+				case error:
+					s.FailWithData(o[1].Interface().(error), c)
+				default:
+					s.SuccessWithData(o[0].Interface(), c)
+					return
+				}
 			} else {
-				s.SuccessWithData(o[0].Interface(), c)
+				switch o[0].Interface().(type) {
+				case []uint8:
+					_, err := c.Writer.Write(o[0].Interface().([]byte))
+					if err != nil {
+						c.Status(http.StatusBadRequest)
+						return
+					}
+				case error:
+					if o[0].Interface().(error) != nil {
+						s.FailWithData(o[0].Interface().(error), c)
+					}
+					return
+				default:
+					s.SuccessWithData(o[0].Interface(), c)
+				}
+				//s.SuccessWithData(o[0].Interface(), c)
 			}
 		}
 	}

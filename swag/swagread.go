@@ -7,6 +7,7 @@ import (
 	"github.com/quiet-xu/goburnt/doc"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -20,12 +21,12 @@ type Method struct {
 	StructName string        //总方法名
 }
 type ReadSwagBase struct {
-	Routers     []RouteItem         `json:"routers"`     //api
-	Auth        bool                `json:"auth"`        //权限
-	Name        string              `json:"name"`        //api名称
-	Description string              `json:"description"` //详细介绍
-	Tag         string              `json:"tag"`         //分组
-	Mids        map[string]struct{} `json:"mid"`         //中间件
+	Routers     []RouteItem    `json:"routers"`     //api
+	Auth        bool           `json:"auth"`        //权限
+	Name        string         `json:"name"`        //api名称
+	Description string         `json:"description"` //详细介绍
+	Tag         string         `json:"tag"`         //分组
+	Mids        map[string]int `json:"mid"`         //中间件
 	ExcludeMids map[string]struct{}
 	Func        reflect.Value `json:"-"`
 	StructName  string        `json:"structName"`
@@ -73,11 +74,11 @@ func (s *SwagRead) ReadSwag() (bases []ReadSwagBase, err error) {
 				continue
 			}
 			groupMids := s.executeMethodGroupData(out).Mids
-			for k := range groupMids {
+			for k, val := range groupMids {
 				if base.Mids == nil {
-					base.Mids = make(map[string]struct{})
+					base.Mids = make(map[string]int)
 				}
-				base.Mids[k] = struct{}{}
+				base.Mids[k] = val
 			}
 			bases = append(bases, base)
 		}
@@ -134,16 +135,23 @@ func (s *SwagRead) getMethodNameAndPkgPaths(dst any) {
 
 // PutOut 输出已经读到的api
 func (s *SwagRead) PutOut(base ...ReadSwagBase) {
-	fmt.Println(fmt.Sprintf("[序号]  %-10s %-60s %-60s %v", "方法", "api", "描述", "中间件"))
+	fmt.Println(fmt.Sprintf("[序号]  %-10s %-60s %-25s %-60s %v", "方法", "api", "分组", "描述", "中间件"))
 	for i, swagBase := range base {
 		for k, route := range swagBase.Routers {
-			var mids []string
-			for mid := range swagBase.Mids {
-				if _, has := swagBase.ExcludeMids[mid]; !has {
-					mids = append(mids, mid)
+			var midIndexS []int
+			midNewMap := make(map[int]string)
+			for mid, v := range swagBase.Mids {
+				if _, have := swagBase.ExcludeMids[mid]; !have {
+					midIndexS = append(midIndexS, v)
+					midNewMap[v] = mid
 				}
 			}
-			fmt.Println(fmt.Sprintf("[%-5s]%-10s %-60s %-60s %v", fmt.Sprintf("%d-%d", i+1, k), route.Method, route.Url, swagBase.Name, mids))
+			sort.Ints(midIndexS)
+			var mids []string
+			for _, index := range midIndexS {
+				mids = append(mids, midNewMap[index])
+			}
+			fmt.Println(fmt.Sprintf("[%-5s]%-10s %-60s %-25s %-60s %v", fmt.Sprintf("%d-%d", i+1, k), route.Method, route.Url, swagBase.Tag, swagBase.Name, mids))
 		}
 	}
 }
