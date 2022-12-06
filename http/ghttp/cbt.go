@@ -81,7 +81,12 @@ func (s *Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		realInput := reflect.New(apiVal.Type().In(0)).Interface()
 		if c.Request.Method == "GET" {
-			err := c.ShouldBind(realInput)
+			err := c.ShouldBindQuery(realInput)
+			if err != nil && err.Error() != "EOF" {
+				s.FailWithData(ReqValidateErr, c)
+				return
+			}
+			err = c.ShouldBind(realInput)
 			if err != nil && err.Error() != "EOF" {
 				s.FailWithData(ReqValidateErr, c)
 				return
