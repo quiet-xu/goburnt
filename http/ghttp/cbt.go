@@ -1,6 +1,7 @@
 package ghttp
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/quiet-xu/goburnt/http/resp"
@@ -102,13 +103,14 @@ func (s *Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
 						return
 					}
 					realInput = &buf
-					//realInput =
-					//reflect.ValueOf(realInput).Set(reflect.ValueOf(reqBytes))
-					//realInput = reqBytes
 				default:
 					err := c.ShouldBindJSON(realInput)
 					if err != nil && err.Error() != "EOF" {
-						s.FailWithData(ReqValidateErr, c)
+						if val, ok := err.(*json.UnmarshalTypeError); ok {
+							s.FailWithData(fmt.Errorf("参数类型错误%s,类型：%s", val.Field, val.Type.Name()), c)
+						} else {
+							s.FailWithData(ReqValidateErr, c)
+						}
 						return
 					}
 				}

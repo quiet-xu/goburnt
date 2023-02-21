@@ -58,9 +58,9 @@ func (s Cbt) SuccessWithData(data interface{}, c *gin.Context) {
 func (s Cbt) FailWithData(err error, c *gin.Context) {
 	resp := make(gin.H)
 	if len(s.responseConfig.errFieldName) > 0 {
-		resp[s.responseConfig.errFieldName] = err
+		resp[s.responseConfig.errFieldName] = err.Error()
 	} else if len(s.responseConfig.dataFieldName) > 0 {
-		resp[s.responseConfig.dataFieldName] = err
+		resp[s.responseConfig.dataFieldName] = err.Error()
 	}
 	if len(s.responseConfig.successFieldName) > 0 {
 		resp[s.responseConfig.successFieldName] = false
