@@ -2,6 +2,7 @@ package ghttp
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"reflect"
 )
@@ -51,6 +52,14 @@ func (s Cbt) SuccessWithData(data interface{}, c *gin.Context) {
 	if len(s.responseConfig.successFieldName) > 0 {
 		resp[s.responseConfig.successFieldName] = true
 	}
+	if len(s.responseConfig.codeFieldName) > 0 {
+		resp[s.responseConfig.codeFieldName] = "200"
+	}
+	if len(s.responseConfig.errFieldName) > 0 {
+		resp[s.responseConfig.errFieldName] = "ok"
+	}
+	//log.Printf("Response: %+v", resp)
+
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -58,13 +67,20 @@ func (s Cbt) SuccessWithData(data interface{}, c *gin.Context) {
 func (s Cbt) FailWithData(err error, c *gin.Context) {
 	resp := make(gin.H)
 	if len(s.responseConfig.errFieldName) > 0 {
-		resp[s.responseConfig.errFieldName] = err
+		resp[s.responseConfig.errFieldName] = err.Error()
 	} else if len(s.responseConfig.dataFieldName) > 0 {
-		resp[s.responseConfig.dataFieldName] = err
+		resp[s.responseConfig.dataFieldName] = err.Error()
+	}
+	if len(s.responseConfig.dataFieldName) > 0 {
+		resp[s.responseConfig.dataFieldName] = err.Error()
 	}
 	if len(s.responseConfig.successFieldName) > 0 {
 		resp[s.responseConfig.successFieldName] = false
 	}
+	if len(s.responseConfig.codeFieldName) > 0 {
+		resp[s.responseConfig.codeFieldName] = "400"
+	}
+	log.Printf("Response: %+v", resp)
 	c.JSON(http.StatusOK, resp)
 	c.Abort()
 }
@@ -80,6 +96,10 @@ func (s Cbt) FailWithCode(err string, code int, c *gin.Context) {
 	if len(s.responseConfig.successFieldName) > 0 {
 		resp[s.responseConfig.successFieldName] = false
 	}
+	if len(s.responseConfig.codeFieldName) > 0 {
+		resp[s.responseConfig.codeFieldName] = "400"
+	}
+	log.Printf("Response: %+v", resp)
 	c.JSON(code, resp)
 	c.Abort()
 }

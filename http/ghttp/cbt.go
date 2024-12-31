@@ -1,9 +1,11 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/quiet-xu/goburnt/http/resp"
+	"log"
 	"net/http"
 	"reflect"
 	"strings"
@@ -51,6 +53,7 @@ type Response struct {
 */
 func (s *Cbt) SetResponse(response any) *Cbt {
 	s.response = response
+	s.getResponseConfig()
 	return s
 }
 
@@ -66,7 +69,7 @@ func (s *Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
 	}
 	inputCount := apiVal.Type().NumIn()
 	outputCount := apiVal.Type().NumOut()
-	if inputCount != 1 {
+	if inputCount < 1 {
 		panic(apiVal.String() + " function only need one arg")
 	}
 	switch outputCount {
@@ -79,50 +82,57 @@ func (s *Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
 	}
 
 	return func(c *gin.Context) {
-		realInput := reflect.New(apiVal.Type().In(0)).Interface()
-		if c.Request.Method == "GET" {
-			err := c.ShouldBindQuery(realInput)
-			if err != nil && err.Error() != "EOF" {
-				s.FailWithData(ReqValidateErr, c)
-				return
-			}
-			err = c.ShouldBind(realInput)
-			if err != nil && err.Error() != "EOF" {
-				s.FailWithData(ReqValidateErr, c)
-				return
-			}
-		} else {
-			if strings.Index(c.Request.Header.Get("Content-Type"), "multipart/form-data") < 0 {
-				switch realInput.(type) {
-				case *[]uint8:
-					buf := make([]byte, c.Request.ContentLength)
-					_, err := c.Request.Body.Read(buf)
-					if err != nil && err.Error() != "EOF" {
-						s.FailWithData(ReqValidateErr, c)
-						return
-					}
-					realInput = &buf
-					//realInput =
-					//reflect.ValueOf(realInput).Set(reflect.ValueOf(reqBytes))
-					//realInput = reqBytes
-				default:
-					err := c.ShouldBindJSON(realInput)
-					if err != nil && err.Error() != "EOF" {
-						s.FailWithData(ReqValidateErr, c)
-						return
-					}
-				}
-
-			}
-		}
-		if reflect.TypeOf(realInput).Implements(MiddlewareInterfaceType) {
-			realInput.(MiddlewareInterface).SetField(c.Keys)
+		if apiVal.Type().In(0) != reflect.TypeOf((*context.Context)(nil)).Elem() {
+			panic("第一个参数必须是context")
 		}
 		in := []reflect.Value{
-			reflect.ValueOf(realInput).Elem(),
+			reflect.ValueOf(c.Request.Context()),
+		}
+		if inputCount > 1 {
+			realInput := reflect.New(apiVal.Type().In(1)).Interface()
+			if c.Request.Method == "GET" {
+				err := c.ShouldBindQuery(realInput)
+				if err != nil && err.Error() != "EOF" {
+					s.FailWithData(ReqValidateErr, c)
+					return
+				}
+				err = c.ShouldBind(realInput)
+				if err != nil && err.Error() != "EOF" {
+					s.FailWithData(ReqValidateErr, c)
+					return
+				}
+			} else {
+				if strings.Index(c.Request.Header.Get("Content-Type"), "multipart/form-data") < 0 {
+					switch realInput.(type) {
+					case *[]uint8:
+						buf := make([]byte, c.Request.ContentLength)
+						_, err := c.Request.Body.Read(buf)
+						if err != nil && err.Error() != "EOF" {
+							s.FailWithData(ReqValidateErr, c)
+							return
+						}
+						realInput = &buf
+						//realInput =
+						//reflect.ValueOf(realInput).Set(reflect.ValueOf(reqBytes))
+						//realInput = reqBytes
+					default:
+						err := c.ShouldBindJSON(realInput)
+						if err != nil && err.Error() != "EOF" {
+							s.FailWithData(ReqValidateErr, c)
+							return
+						}
+					}
+
+				}
+			}
+			log.Printf("Request: %+v", realInput)
+
+			if reflect.TypeOf(realInput).Implements(MiddlewareInterfaceType) {
+				realInput.(MiddlewareInterface).SetField(c.Keys)
+			}
+			in = append(in, reflect.ValueOf(realInput).Elem())
 		}
 		o := apiVal.Call(in)
-
 		switch len(o) {
 		case 1: //(err error)
 			if o[0].Interface() != nil {

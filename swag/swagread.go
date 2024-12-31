@@ -119,11 +119,19 @@ func (s *SwagRead) AddReadServices(services ...any) *SwagRead {
 // getMethodNameAndPkgPaths 获取方法名 + pkgPath
 func (s *SwagRead) getMethodNameAndPkgPaths(dst any) {
 	stValue := reflect.ValueOf(dst)
-	structName := reflect.TypeOf(dst).Name()
-	num := stValue.NumMethod()
+	fmt.Println("nn", stValue.NumMethod())
+	if stValue.Kind() == reflect.Ptr {
+		stValue = stValue.Elem()
+	}
+	dtype := reflect.TypeOf(dst)
+	if dtype.Kind() == reflect.Ptr {
+		dtype = dtype.Elem()
+	}
+	structName := dtype.Name()
+	num := reflect.ValueOf(dst).NumMethod()
 	for i := 0; i < num; i++ {
 		name := reflect.TypeOf(dst).Method(i).Name
-		path := reflect.TypeOf(dst).PkgPath()
+		path := dtype.PkgPath()
 		s.methodPathMap[path] = append(s.methodPathMap[path], Method{
 			Name:       name,
 			Func:       reflect.ValueOf(dst).Method(i),

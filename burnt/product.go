@@ -2,6 +2,7 @@ package burnt
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/quiet-xu/goburnt/conf"
 	"github.com/quiet-xu/goburnt/swag"
 	"reflect"
@@ -21,11 +22,17 @@ func (s *Burnt) setProductBoot() (err error) {
 	}
 	for _, view := range s.services {
 		stValue := reflect.ValueOf(view)
-		structName := reflect.TypeOf(view).Name()
-		num := stValue.NumMethod()
+		t := reflect.TypeOf(view)
+		if stValue.Kind() == reflect.Ptr {
+			stValue = stValue.Elem()
+			t = t.Elem()
+		}
+		structName := t.Name()
+		fmt.Println(structName)
+		num := reflect.ValueOf(view).NumMethod()
 		for i := 0; i < num; i++ {
 			name := reflect.TypeOf(view).Method(i).Name
-			path := reflect.TypeOf(view).PkgPath()
+			path := t.PkgPath()
 			if val, has := s.productBurnt[path+structName+name]; has {
 				var midIndexS []int
 				midNewMap := make(map[int]string)
