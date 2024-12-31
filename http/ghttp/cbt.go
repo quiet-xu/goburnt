@@ -1,11 +1,9 @@
 package ghttp
 
 import (
-	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/quiet-xu/goburnt/http/resp"
-	"log"
 	"net/http"
 	"reflect"
 	"strings"
