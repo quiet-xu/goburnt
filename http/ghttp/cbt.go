@@ -1,6 +1,7 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/quiet-xu/goburnt/http/resp"
@@ -57,6 +58,7 @@ func (s *Cbt) SetResponse(response any) *Cbt {
 
 // Cbt 转换 (基础) ControlBasicTrans
 func (s *Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
+
 	switch apiFunc.(type) {
 	case func(*gin.Context):
 		return apiFunc.(func(*gin.Context))
@@ -123,7 +125,6 @@ func (s *Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
 
 				}
 			}
-			log.Printf("Request: %+v", realInput)
 
 			if reflect.TypeOf(realInput).Implements(MiddlewareInterfaceType) {
 				realInput.(MiddlewareInterface).SetField(c.Keys)
