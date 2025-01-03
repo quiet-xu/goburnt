@@ -27,6 +27,7 @@ type ReadSwagBase struct {
 	Description string         `json:"description"` //详细介绍
 	Tag         string         `json:"tag"`         //分组
 	Mids        map[string]int `json:"mid"`         //中间件
+	mids        []string
 	ExcludeMids map[string]struct{}
 	Func        reflect.Value `json:"-"`
 	StructName  string        `json:"structName"`
@@ -73,12 +74,11 @@ func (s *SwagRead) ReadSwag() (bases []ReadSwagBase, err error) {
 			if len(out) == 0 {
 				continue
 			}
-			groupMids := s.executeMethodGroupData(out).Mids
-			for k, val := range groupMids {
-				if base.Mids == nil {
-					base.Mids = make(map[string]int)
-				}
-				base.Mids[k] = val
+			groupMids := s.executeMethodGroupData(out)
+			arr := append(groupMids, base.mids...)
+			base.Mids = make(map[string]int, len(arr))
+			for midIndex, name := range arr {
+				base.Mids[name] = midIndex
 			}
 			bases = append(bases, base)
 		}

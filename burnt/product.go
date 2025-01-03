@@ -2,7 +2,6 @@ package burnt
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/quiet-xu/goburnt/conf"
 	"github.com/quiet-xu/goburnt/swag"
 	"reflect"
@@ -28,7 +27,6 @@ func (s *Burnt) setProductBoot() (err error) {
 			t = t.Elem()
 		}
 		structName := t.Name()
-		fmt.Println(structName)
 		num := reflect.ValueOf(view).NumMethod()
 		for i := 0; i < num; i++ {
 			name := reflect.TypeOf(view).Method(i).Name

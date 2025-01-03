@@ -10,7 +10,7 @@ type AView struct {
 // Get
 // @Mid log,XXX,SAD,XASD
 // @Mid! auth
-// @Summary 获取该主体的当前最新主流程合同
+// @Summary 第一个
 // @Description xxxxxxxaaa
 // @Description asdasdop
 // @Tags ygb - 合同

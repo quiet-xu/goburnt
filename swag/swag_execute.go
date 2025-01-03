@@ -38,7 +38,7 @@ func (s *SwagRead) executeServicesData(write string) (base ReadSwagBase, err err
 			base.Auth = true
 		}
 		if strings.Contains(item, "Mid") && !strings.Contains(item, "Mid!") {
-			base.Mids = s.getMid(item, 2)
+			base.mids = append(base.mids, s.getMid(item, 2)...)
 		}
 		if strings.Contains(item, "Mid!") {
 			base.ExcludeMids = s.getExcludeMid(item)
@@ -51,13 +51,12 @@ func (s *SwagRead) executeServicesData(write string) (base ReadSwagBase, err err
 }
 
 // executeMethodGroupData 处理方法组的注释
-func (s *SwagRead) executeMethodGroupData(write string) (base ReadSwagBase) {
+func (s *SwagRead) executeMethodGroupData(write string) (mids []string) {
 	outList := strings.Split(write, "\n")
 	for _, outItem := range outList {
 		if strings.Contains(outItem, "@Mid") {
 			outItem = strings.TrimPrefix(outItem, " ")
-			base.Mids = s.getMid(outItem, 3)
-
+			mids = append(mids, s.getMid(outItem, 3)...)
 		}
 	}
 	return
@@ -114,10 +113,9 @@ func (*SwagRead) getDescription(dst string) (description string) {
 	return
 }
 
-func (*SwagRead) getMid(dst string, index int) (midMap map[string]int) {
+func (*SwagRead) getMid(dst string, index int) (mids []string) {
 	i := 0
 	routerStrs := strings.Split(dst, " ")
-	var mids []string
 	for _, item := range routerStrs {
 		if len(strings.ReplaceAll(item, " ", "")) > 0 {
 			i++
@@ -127,12 +125,9 @@ func (*SwagRead) getMid(dst string, index int) (midMap map[string]int) {
 			}
 		}
 	}
-	midMap = make(map[string]int, len(mids))
-	for k, mid := range mids {
-		midMap[mid] = k
-	}
 	return
 }
+
 func (*SwagRead) getExcludeMid(dst string) (exMap map[string]struct{}) {
 
 	i := 0
