@@ -40,8 +40,8 @@ func (s *HttpGin) Init() (err error) {
 		AllowOriginFunc: func(string) bool {
 			return true
 		},
-		AllowAllOrigins: true,
-		AllowMethods:    []string{"GET", "POST", "OPTIONS"},
+		AllowAllOrigins: false,
+		AllowMethods:    []string{"GET", "POST"},
 		AllowHeaders:    []string{"Origin", "Authorization", "Content-Length", "Content-Type", "Content-code", "Content-data"},
 		MaxAge:          12 * time.Hour,
 	}))
