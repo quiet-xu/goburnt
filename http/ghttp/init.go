@@ -47,12 +47,13 @@ func (s *HttpGin) Init() (err error) {
 	}))
 	s.ginEngine.Group(s.basePath)
 	fmt.Println("status: gin http load over~ 🎉 ", "path : http://"+s.port)
-	err = s.ginEngine.Run(s.port)
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-
+	go func() {
+		err = s.ginEngine.Run(s.port)
+		if err != nil {
+			log.Fatal(err.Error())
+			return
+		}
+	}()
 	return
 }
 

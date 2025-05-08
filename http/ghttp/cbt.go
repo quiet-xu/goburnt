@@ -59,9 +59,9 @@ func (s *Cbt) SetResponse(response any) *Cbt {
 // Cbt 转换 (基础) ControlBasicTrans
 func (s *Cbt) Cbt(apiFunc interface{}) func(c *gin.Context) {
 
-	switch apiFunc.(type) {
+	switch f := apiFunc.(type) {
 	case func(*gin.Context):
-		return apiFunc.(func(*gin.Context))
+		return f
 	}
 	apiVal := reflect.ValueOf(apiFunc)
 	if apiVal.Type().Kind() != reflect.Func {
